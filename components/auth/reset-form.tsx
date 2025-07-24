@@ -4,7 +4,6 @@ import { CardWrapper } from "./card-wrapper";
 import * as z from "zod";
 import { infer as zInfer } from "zod";
 import { LoginSchema } from "@/schemas";
-import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
@@ -23,13 +22,7 @@ import { FormSuccess } from "../form-success";
 import { login } from "@/actions/login";
 import { useState } from "react";
 
-export const LoginForm = () => {
-  const searchParams = useSearchParams();
-  const urlError =
-    searchParams.get("error") === "OAuthAccountNotLinked"
-      ? "Email already in use with different provider!"
-      : "";
-
+export const ResetForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
@@ -56,11 +49,10 @@ export const LoginForm = () => {
 
   return (
     <CardWrapper
-      headerTitle="Login"
-      headerLabel="Welcome Back"
-      backButtonLabel="Don't have an account?"
-      backButtonHref="/auth/register"
-      showSocial
+      headerTitle="Forgot your password?"
+      headerLabel="Enter your email below"
+      backButtonLabel="Back to login"
+      backButtonHref="/auth/login"
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -83,32 +75,11 @@ export const LoginForm = () => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={isLoading} type="password" />
-                  </FormControl>
-                  <Button
-                    size="sm"
-                    variant="link"
-                    asChild
-                    className="px-0 flex items-start justify-start font-normal text-[13px]"
-                  >
-                    <Link href="/auth/reset">Forgot Password?</Link>
-                  </Button>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
           <FormSuccess message={success} />
-          <FormError message={error || urlError} />
+          <FormError message={error} />
           <Button type="submit" className="w-full" disabled={isLoading}>
-            Login
+            Send reset email
           </Button>
         </form>
       </Form>
