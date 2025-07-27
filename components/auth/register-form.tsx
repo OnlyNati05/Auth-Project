@@ -19,7 +19,7 @@ import { Button } from "../ui/button";
 import { FormError } from "../form-error";
 import { FormSuccess } from "../form-success";
 import { register } from "@/actions/register";
-import { useState } from "react";
+import { startTransition, useState } from "react";
 
 export const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -39,12 +39,14 @@ export const RegisterForm = () => {
     setError("");
     setSuccess("");
 
-    setIsLoading(true);
-    register(values).then((data) => {
-      setError(data.error);
-      setSuccess(data.success);
+    startTransition(() => {
+      setIsLoading(true);
+      register(values).then((data) => {
+        setError(data.error);
+        setSuccess(data.success);
+      });
+      setIsLoading(false);
     });
-    setIsLoading(false);
   };
 
   return (

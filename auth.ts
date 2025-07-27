@@ -5,6 +5,7 @@ import { db } from "./lib/db";
 import authConfig from "./auth.config";
 import { getUserById } from "./data/user";
 import { UserRole } from "./lib/generated/prisma";
+import { getTwoFactorConfirmationByUserId } from "./data/two-factor-confirmation";
 
 export const {
   handlers: { GET, POST },
@@ -31,6 +32,7 @@ export const {
   callbacks: {
     async signIn({ user, account }) {
       //Allow 0Auth without email verification
+
       if (account?.provider !== "credentials") return true;
 
       const exisitingUser = await getUserById({ id: user.id });
@@ -38,6 +40,21 @@ export const {
       if (!exisitingUser?.emailVerified) return false;
 
       //  TODO: Add 2FA check
+      if (exisitingUser.isTwoFactorEnabled) {
+        const twoFactorConformation = await getTwoFactorConfirmationByUserId(
+          exisitingUser.id
+        );
+        if (!twoFactorConformation) {
+          return false;
+        }
+
+        //Delete two factor confirmation for next sign in
+        await db.twoFactorConformation.delete({
+          where: {
+            id: twoFactorConformation.id,
+          },
+        });
+      }
 
       return true;
     },
@@ -49,6 +66,11 @@ export const {
       if (token.role && session.user) {
         session.user.role = token.role as UserRole;
       }
+
+      if (session.user) {
+        session.user.isTwoFactorEnabled = token.isTwoFactorEnabled as boolean;
+      }
+
       return session;
     },
     async jwt({ token }) {
@@ -59,6 +81,7 @@ export const {
       if (!exisitingUser) return token;
 
       token.role = exisitingUser.role;
+      token.isTwoFactorEnabled = exisitingUser.isTwoFactorEnabled;
 
       return token;
     },
